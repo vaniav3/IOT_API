@@ -1,62 +1,100 @@
-import { connectToDatabase } from './init-mongo.js';
-
-const connection = await connectToDatabase();
+import { pool } from "../database.js";
 
 export const getLocations = async (req, res) => {
     try {
-        const locations = await connection.models.Location.find();
-        res.json(locations);
+        const [rows] = await pool.promise().query("SELECT * FROM Location");
+        res.status(200).json(rows);
     } catch (error) {
-        console.error('Error al obtener los lugares:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json(error);
     }
 }
 
-export const getLocation = async (req, res) => {
+export const getLocationById = async (req, res) => {
     try {
         const { id } = req.params;
-        const location = await connection.models.Location.findById(id);
-        res.json(location);
+        const [rows] = await pool.promise().query("SELECT * FROM Location WHERE ID = ?", [id]);
+        res.status(200).json(rows[0]);
     } catch (error) {
-        console.error('Error al obtener el lugar:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json(error);
     }
 }
+
+export const createLocation = async (req, res) => {
+    try {
+        const { company_id, location_name, location_country, location_city, location_meta } = req.body;
+        
+        //verifica la compañia 
+        const [rows] = await pool.promise().query("SELECT * FROM Company WHERE ID = ?", [company_id]);
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "Company not found" });
+        }
+
+        const insert = await pool.promise().query("INSERT INTO Location (company_id, location_name, location_country, location_city, location_meta) VALUES (?, ?, ?, ?, ?)", [company_id, location_name, location_country, location_city, location_meta]);
+        
+        if (insert[0].affectedRows === 0) {
+            return res.status(400).json({ message: "Location not created" });
+        }
+
+        res.status(200).json({
+            message: "Location created successfully",
+        });
+    } catch (error) {
+        res.status(500).json(error);
+    }
+}
+
+// json para agregar una locacion
+// {
+//     "company_id": 1,
+//     "location_name": "Bogota",
+//     "location_country": "Colombia",
+//     "location_city": "Bogota",
+//     "location_meta": "Calle 123"
+// }
 
 export const editLocation = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, country, city, meta } = req.body;
-        const location = await connection.models.Location.findById(id);
-        if (!location) {
-            res.status(404).json({ error: 'El lugar no existe.' });
-            return;
+        const { company_id, location_name, location_country, location_city, location_meta } = req.body;
+
+        //verifica la compañia 
+        const [rows] = await pool.promise().query("SELECT * FROM Company WHERE ID = ?", [company_id]);
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "Company not found" });
         }
-        location.name = name;
-        location.country = country;
-        location.city = city;
-        location.meta = meta;
-        await location.save();
-        res.json(location);
-    }
-    catch (error) {
-        console.error('Error al editar el lugar:', error);
-        res.status(500).json({ error: error.message });
+
+        const update = await pool.promise().query("UPDATE Location SET company_id = ?, location_name = ?, location_country = ?, location_city = ?, location_meta = ? WHERE ID = ?", [company_id, location_name, location_country, location_city, location_meta, id]);
+        
+        if (update[0].affectedRows === 0) {
+            return res.status(400).json({ message: "Location not found" });
+        }
+
+        res.status(200).json({
+            message: "Location updated successfully",
+        });
+
+    } catch (error) {
+        res.status(500).json(error);
     }
 }
 
 export const deleteLocation = async (req, res) => {
     try {
         const { id } = req.params;
-        const location = await connection.models.Location.findById(id);
-        if (!location) {
-            res.status(404).json({ error: 'El lugar no existe.' });
-            return;
+        const [rows] = await pool.promise().query("DELETE Location, Sensor, SensorData\
+        FROM Location\
+        LEFT JOIN Sensor ON Location.ID = Sensor.location_id\
+        LEFT JOIN SensorData ON Sensor.ID = SensorData.sensor_id\
+        WHERE Location.ID = ?;\
+        ", [id]);
+        if (rows.affectedRows === 0) {
+            return res.status(400).json({ message: "Location not found" });
         }
-        await location.remove();
-        res.json({ message: 'Lugar eliminado exitosamente.' });
+
+        res.status(200).json({
+            message: "Location deleted successfully",
+        });
     } catch (error) {
-        console.error('Error al eliminar el lugar:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json(error);
     }
 }
