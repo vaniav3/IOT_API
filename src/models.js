@@ -42,8 +42,8 @@ const sensorDataSchema = new Schema(
 );
 
 const connection = await connectToDatabase();
-export const Admin = connection.model("Admin", adminSchema);
-export const Company = connection.model("Company", companySchema);
-export const Location = connection.model("Location", locationSchema);
-export const Sensor = connection.model("Sensor", sensorSchema);
-export const SensorData = connection.model("SensorData", sensorDataSchema);
+export const Admin = connection.model("Admin", adminSchema, "Admin");
+export const Company = connection.model("Company", companySchema, "Company");
+export const Location = connection.model("Location", locationSchema, "Location");
+export const Sensor = connection.model("Sensor", sensorSchema, "Sensor");
+export const SensorData = connection.model("SensorData", sensorDataSchema, "SensorData");
