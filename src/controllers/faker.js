@@ -44,6 +44,10 @@ export const seedDatabase = async (req, res) => {
     const [sensors] = await pool.promise().query('SELECT ID, sensor_category FROM Sensor');
 
     // Para cada sensor, crear de 40 a 50 datos
+    const today = new Date();
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(today.getFullYear() - 1);
+    
     for(let sensor of sensors) {
         const dataCount = faker.random.numeric({ min: 40, max: 50 });
         for(let i = 0; i < dataCount; i++) {
@@ -51,7 +55,10 @@ export const seedDatabase = async (req, res) => {
             const temperature = (sensor.sensor_category == "Humidity/Temperature") ? faker.random.numeric() : null;
             const solarRadiation = (sensor.sensor_category == "Solar Radiation/Heat") ? faker.random.numeric() : null;
             const solarHeat = (sensor.sensor_category == "Solar Radiation/Heat") ? faker.random.numeric() : null;
-            const createDate = faker.date.recent();
+            const createDate = faker.datatype.datetime({
+                min: oneYearAgo,
+                max: today.getTime()
+            });;
             await pool.promise().query('INSERT INTO SensorData (sensor_id, humidity, temperature, solar_radiation, solar_heat, create_date) VALUES (?, ?, ?, ?, ?, ?)', [sensor.ID, humidity, temperature, solarRadiation, solarHeat, createDate]);
         }
     }

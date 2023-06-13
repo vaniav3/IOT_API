@@ -12,11 +12,11 @@ export const addSensorData = async (req, res) => {
 
         for(let i = 0; i < json_data.length; i++){
             const dato = json_data[i];
-            const insert = await pool.promise().query("INSERT INTO SensorData (sensor_id, humidity, temperature, solar_radiation, solar_heat) VALUES (?, ?, ?, ?, ?)", [rows[0].ID, dato.humidity, dato.temperature, dato.solar_radiation, dato.solar_heat]);
+            const insert = await pool.promise().query("INSERT INTO SensorData (sensor_id, humidity, temperature, solar_radiation, solar_heat, create_date) VALUES (?, ?, ?, ?, ?, ?)", [rows[0].ID, dato.humidity, dato.temperature, dato.solar_radiation, dato.solar_heat, new Date()]);
             if (insert[0].affectedRows === 0) {
                 return res.status(400).json({ message: "SensorData not created" });
             }
-        }        
+        }     
 
         res.status(201).json({
             message: "SensorData created successfully",
@@ -102,10 +102,15 @@ export const getSensorData = async (req, res) => {
         }
         else if((from !== undefined && to !== undefined) && sensor_id === undefined)
         {
-            const query = "SELECT SensorData.* FROM SensorData INNER JOIN Sensor ON SensorData.sensor_id = Sensor.ID INNER JOIN Location ON Sensor.location_id = Location.ID INNER JOIN Company ON Location.company_id = Company.ID WHERE Company.company_api_key = ? AND SensorData.created_at BETWEEN ? AND ?;";
-            const date = new Date(0);
-            const desde = date.setUTCSeconds(from).toISOString();
-            const hasta = date.setUTCSeconds(to).toISOString();
+            const query = "SELECT SensorData.*\
+                FROM SensorData\
+                INNER JOIN Sensor ON SensorData.sensor_id = Sensor.ID\
+                INNER JOIN Location ON Sensor.location_id = Location.ID\
+                INNER JOIN Company ON Location.company_id = Company.ID\
+                WHERE Company.company_api_key = ? AND SensorData.create_date BETWEEN ? AND ?";
+
+            const desde = new Date(from * 1000)
+            const hasta = new Date(to * 1000)
 
             const [rows] = await pool.promise().query(query, [company_api_key, desde, hasta]);
 
@@ -121,17 +126,24 @@ export const getSensorData = async (req, res) => {
         }
         else if((from !== undefined && to !== undefined) && sensor_id !== undefined)
         {
-            const arr = JSON.parse(sensor_id); 
+            const arr = JSON.parse(sensor_id);
 
             if(typeof arr == 'object')
             {
-                const query = "SELECT SensorData.* FROM SensorData INNER JOIN Sensor ON SensorData.sensor_id = Sensor.ID INNER JOIN Location ON Sensor.location_id = Location.ID INNER JOIN Company ON Location.company_id = Company.ID WHERE Company.company_api_key = ? AND SensorData.created_at BETWEEN ? AND ? AND Sensor.ID IN (?);";
-                const ids = arr.join(',');
-                const date = new Date(0);
-                const desde = date.setUTCSeconds(from).toISOString();
-                const hasta = date.setUTCSeconds(to).toISOString();
+                const query = "SELECT SensorData.*\
+                    FROM SensorData\
+                    INNER JOIN Sensor ON SensorData.sensor_id = Sensor.ID\
+                    INNER JOIN Location ON Sensor.location_id = Location.ID\
+                    INNER JOIN Company ON Location.company_id = Company.ID\
+                    WHERE Company.company_api_key = ? \
+                        AND SensorData.create_date BETWEEN ? AND ?\
+                        AND SensorData.sensor_id IN (?)\
+                    ";
+
+                const desde = new Date(from * 1000)
+                const hasta = new Date(to * 1000)
                 
-                const [rows] = await pool.promise().query(query, [company_api_key, desde, hasta, ids]);
+                const [rows] = await pool.promise().query(query, [company_api_key, desde, hasta, arr]);
 
                 if (rows.length === 0) {
                     return res.status(400).json({ message: "SensorData not found" });
