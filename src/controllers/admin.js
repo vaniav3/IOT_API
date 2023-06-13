@@ -1,16 +1,16 @@
-import { pool } from "../database.js";
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { LLAVE_JWT } from "../helpers/env.helpers.js";
+const { pool } = require('../database.js');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { LLAVE_JWT } = require('../helpers/env.helpers.js');
 
-export const loggin = async (req, res) => {
+const loggin = async (req, res) => {
     const { user, password } = req.body;
   
     // Consulta para verificar las credenciales del usuario
     const query = `SELECT ID, Password FROM Admin WHERE Username = ?`;
   
     try {
-      const [rows] = await pool.promise().query(query, [user]);
+      const [rows] = await pool.query(query, [user]);
   
       if (rows.length === 0) {
         return res.status(401).json({ message: 'Credenciales inválidas' });
@@ -37,15 +37,14 @@ export const loggin = async (req, res) => {
       res.status(500).json({ message: 'Error en el servidor' });
     }
 }
-
-export const register = async (req, res) => {
+const register = async (req, res) => {
     const { user, password } = req.body;
   
     // Consulta para verificar si el usuario ya existe
     const query = `SELECT ID FROM Admin WHERE Username = ?`;
   
     try {
-      const [rows] = await pool.promise().query(query, [user]);
+      const [rows] = await pool.query(query, [user]);
   
       if (rows.length > 0) {
         return res.status(401).json({ message: 'El usuario ya existe' });
@@ -57,7 +56,7 @@ export const register = async (req, res) => {
       // Consulta para crear el usuario
       const insert = `INSERT INTO Admin (Username, Password) VALUES (?, ?)`;
   
-      await pool.promise().query(insert, [user, hashedPassword]);
+      await pool.query(insert, [user, hashedPassword]);
   
       res.json({ message: 'Usuario creado exitosamente' });
     } catch (error) {
@@ -65,3 +64,8 @@ export const register = async (req, res) => {
       res.status(500).json({ message: 'Error en el servidor' });
     }
 }
+
+module.exports = { 
+    loggin,
+    register
+};

@@ -1,8 +1,8 @@
-import { Router } from "express";
-import { deleteSensor, editSensor, getSensors, createSensor, getSensorById } from "../controllers/sensor.js";
-import { authenticateTokenRoot } from "../middleware/jwt.js";
+const express = require('express');
+const router = express.Router();
+const { authenticateTokenRoot } = require('../middleware/jwt.js');
+const { deleteSensor, editSensor, getSensors, createSensor, getSensorById } = require('../controllers/sensor.js');
 
-const router = Router();
 
 router.get('/', authenticateTokenRoot, getSensors);
 router.get('/:id', authenticateTokenRoot, getSensorById); 
@@ -10,4 +10,4 @@ router.post('/add', authenticateTokenRoot, createSensor);
 router.put('/edit/:id', authenticateTokenRoot, editSensor);
 router.delete('/delete/:id', authenticateTokenRoot, deleteSensor)
 
-export default router;
+module.exports = router;

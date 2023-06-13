@@ -1,11 +1,11 @@
-import express from 'express'
-import logger from 'morgan'
-import adminRoutes from './routes/admin.routes.js'
-import companyRoutes from './routes/company.routes.js'
-import locationRoutes from './routes/location.routes.js'
-import sensorRoutes from './routes/sensor.routes.js'
-import apiRoutes from './routes/api.routes.js'
-import dataRoutes from './routes/data.routes.js'
+const express = require('express')
+const logger = require('morgan')
+const adminRoutes = require('./routes/admin.routes.js')
+const companyRoutes = require('./routes/company.routes.js')
+const locationRoutes = require('./routes/location.routes.js')
+const sensorRoutes = require('./routes/sensor.routes.js')
+const apiRoutes = require('./routes/api.routes.js')
+const dataRoutes = require('./routes/data.routes.js')
 
 const app = express()
 app.use(logger('dev'));

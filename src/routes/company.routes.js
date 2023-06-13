@@ -1,10 +1,10 @@
-import { Router } from "express";
-import { addCompany, getCompanies } from "../controllers/company.js";
-import { authenticateTokenRoot } from "../middleware/jwt.js";
+const { Router } = require('express');
+const {addCompany, getCompanies} = require('../controllers/company.js');
+const {authenticateTokenRoot} = require('../middleware/jwt.js');
 
 const router = Router();
 
 router.post('/add', authenticateTokenRoot, addCompany)
 router.get('/', authenticateTokenRoot, getCompanies)
 
-export default router;
+module.exports = router;

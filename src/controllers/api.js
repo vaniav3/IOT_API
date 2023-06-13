@@ -1,18 +1,17 @@
-import { pool } from "../database.js";
+const { pool } = require("../database.js");
 
-
-export const addSensorData = async (req, res) => {
+ const addSensorData = async (req, res) => {
     try {
         const { sensor_api_key, json_data } = req.body;
         
-        const [rows] = await pool.promise().query("SELECT * FROM Sensor WHERE sensor_api_key = ?", [sensor_api_key]);
+        const [rows] = await pool.query("SELECT * FROM Sensor WHERE sensor_api_key = ?", [sensor_api_key]);
         if (rows.length === 0) {
             return res.status(400).json({ message: "Sensor not found" });
         }
 
         for(let i = 0; i < json_data.length; i++){
             const dato = json_data[i];
-            const insert = await pool.promise().query("INSERT INTO SensorData (sensor_id, humidity, temperature, solar_radiation, solar_heat, create_date) VALUES (?, ?, ?, ?, ?, ?)", [rows[0].ID, dato.humidity, dato.temperature, dato.solar_radiation, dato.solar_heat, new Date()]);
+            const insert = await pool.query("INSERT INTO SensorData (sensor_id, humidity, temperature, solar_radiation, solar_heat, create_date) VALUES (?, ?, ?, ?, ?, ?)", [rows[0].ID, dato.humidity, dato.temperature, dato.solar_radiation, dato.solar_heat, new Date()]);
             if (insert[0].affectedRows === 0) {
                 return res.status(400).json({ message: "SensorData not created" });
             }
@@ -42,7 +41,7 @@ export const addSensorData = async (req, res) => {
 //     }
 // ]
 
-export const getSensorData = async (req, res) => {
+ const getSensorData = async (req, res) => {
     try {
 
         const { company_api_key, from, to, sensor_id } = req.query;
@@ -69,7 +68,7 @@ export const getSensorData = async (req, res) => {
             INNER JOIN Company ON Location.company_id = Company.ID\
             WHERE Company.company_api_key = ?";
             
-            const [rows] = await pool.promise().query(query, [company_api_key]);
+            const [rows] = await pool.query(query, [company_api_key]);
             
             if (rows.length === 0) {
                 return res.status(400).json({ message: "SensorData not found" });
@@ -88,7 +87,7 @@ export const getSensorData = async (req, res) => {
             {
                 const query = "SELECT SensorData.* FROM SensorData INNER JOIN Sensor ON SensorData.sensor_id = Sensor.ID INNER JOIN Location ON Sensor.location_id = Location.ID INNER JOIN Company ON Location.company_id = Company.ID WHERE Company.company_api_key = ? AND Sensor.ID IN (?);";
 
-                const [rows] = await pool.promise().query(query, [company_api_key, arr]);
+                const [rows] = await pool.query(query, [company_api_key, arr]);
 
                 if (rows.length === 0) {
                     return res.status(400).json({ message: "SensorData not found" });
@@ -112,7 +111,7 @@ export const getSensorData = async (req, res) => {
             const desde = new Date(from * 1000)
             const hasta = new Date(to * 1000)
 
-            const [rows] = await pool.promise().query(query, [company_api_key, desde, hasta]);
+            const [rows] = await pool.query(query, [company_api_key, desde, hasta]);
 
             if (rows.length === 0) {
                 return res.status(400).json({ message: "SensorData not found" });
@@ -143,7 +142,7 @@ export const getSensorData = async (req, res) => {
                 const desde = new Date(from * 1000)
                 const hasta = new Date(to * 1000)
                 
-                const [rows] = await pool.promise().query(query, [company_api_key, desde, hasta, arr]);
+                const [rows] = await pool.query(query, [company_api_key, desde, hasta, arr]);
 
                 if (rows.length === 0) {
                     return res.status(400).json({ message: "SensorData not found" });
@@ -164,7 +163,7 @@ export const getSensorData = async (req, res) => {
     }
 }
 
-export const getLocationApi = async (req, res) => {
+ const getLocationApi = async (req, res) => {
     try {
         const { company_api_key } = req.query;
 
@@ -174,7 +173,7 @@ export const getLocationApi = async (req, res) => {
         else {
             const query = "SELECT Location.* FROM Location INNER JOIN Company ON Location.company_id = Company.ID WHERE Company.company_api_key = ?;";
 
-            const [rows] = await pool.promise().query(query, [company_api_key]);
+            const [rows] = await pool.query(query, [company_api_key]);
 
             if (rows.length === 0) {
                 return res.status(400).json({ message: "Location not found" });
@@ -191,7 +190,7 @@ export const getLocationApi = async (req, res) => {
     }
 }
 
-export const getSensorApi = async (req, res) => {
+ const getSensorApi = async (req, res) => {
     try {
         const { company_api_key } = req.query;
 
@@ -201,7 +200,7 @@ export const getSensorApi = async (req, res) => {
         else {
             const query = "SELECT Sensor.* FROM Sensor INNER JOIN Location ON Sensor.location_id = Location.ID INNER JOIN Company ON Location.company_id = Company.ID WHERE Company.company_api_key = ?;";
 
-            const [rows] = await pool.promise().query(query, [company_api_key]);
+            const [rows] = await pool.query(query, [company_api_key]);
 
             if (rows.length === 0) {
                 return res.status(400).json({ message: "Sensor not found" });
@@ -216,4 +215,11 @@ export const getSensorApi = async (req, res) => {
     } catch (error) {
         res.status(500).json(error);
     }
+}
+
+module.exports = {
+    addSensorData,
+    getSensorData,
+    getLocationApi,
+    getSensorApi
 }

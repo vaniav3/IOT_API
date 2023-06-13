@@ -1,7 +1,7 @@
-import { LLAVE_JWT } from "../helpers/env.helpers.js";
-import jwt from 'jsonwebtoken';
+const jwt = require('jsonwebtoken');
+const { LLAVE_JWT } = require('../helpers/env.helpers.js');
 
-export const  authenticateTokenRoot = (req, res, next) => {
+const authenticateTokenRoot = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
   
@@ -19,3 +19,5 @@ export const  authenticateTokenRoot = (req, res, next) => {
       next();
     });
 }
+
+module.exports = {authenticateTokenRoot};

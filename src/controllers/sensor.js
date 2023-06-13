@@ -1,38 +1,38 @@
-import { pool } from "../database.js";
-import { v4 as uuidv4 } from 'uuid';
+const { pool } = require("../database.js");
+const { v4: uuidv4 } = require('uuid');
 
-export const getSensors = async (req, res) => {
+ const getSensors = async (req, res) => {
     try {
-        const [rows] = await pool.promise().query("SELECT * FROM Sensor");
+        const [rows] = await pool.query("SELECT * FROM Sensor");
         res.status(200).json(rows);
     } catch (error) {
         res.status(500).json(error);
     }
 }
 
-export const getSensorById = async (req, res) => {
+ const getSensorById = async (req, res) => {
     try {
         const { id } = req.params;
-        const [rows] = await pool.promise().query("SELECT * FROM Sensor WHERE ID = ?", [id]);
+        const [rows] = await pool.query("SELECT * FROM Sensor WHERE ID = ?", [id]);
         res.status(200).json(rows[0]);
     } catch (error) {
         res.status(500).json(error);
     }
 }
 
-export const createSensor = async (req, res) => {
+ const createSensor = async (req, res) => {
     try {
         const { location_id, sensor_name, sensor_category, sensor_meta } = req.body;
         
         //verifica la location 
-        const [rows] = await pool.promise().query("SELECT * FROM Location WHERE ID = ?", [location_id]);
+        const [rows] = await pool.query("SELECT * FROM Location WHERE ID = ?", [location_id]);
         if (rows.length === 0) {
             return res.status(404).json({ message: "Location not found" });
         }
 
         const sensor_api_key = uuidv4();
 
-        const insert = await pool.promise().query("INSERT INTO Sensor (location_id, sensor_name, sensor_category, sensor_meta, sensor_api_key) VALUES (?, ?, ?, ?, ?)", [location_id, sensor_name, sensor_category, sensor_meta, sensor_api_key]);
+        const insert = await pool.query("INSERT INTO Sensor (location_id, sensor_name, sensor_category, sensor_meta, sensor_api_key) VALUES (?, ?, ?, ?, ?)", [location_id, sensor_name, sensor_category, sensor_meta, sensor_api_key]);
         
         if (insert[0].affectedRows === 0) {
             return res.status(400).json({ message: "Sensor not created" });
@@ -55,18 +55,18 @@ export const createSensor = async (req, res) => {
 //     "sensor_meta": "Sensor de temperatura",
 // }
 
-export const editSensor = async (req, res) => {
+ const editSensor = async (req, res) => {
     try {
         const { id } = req.params;
         const { location_id, sensor_name, sensor_category, sensor_meta } = req.body;
 
         //verifica la location 
-        const [rows] = await pool.promise().query("SELECT * FROM Location WHERE ID = ?", [location_id]);
+        const [rows] = await pool.query("SELECT * FROM Location WHERE ID = ?", [location_id]);
         if (rows.length === 0) {
             return res.status(404).json({ message: "Location not found" });
         }
 
-        const insert = await pool.promise().query("UPDATE Sensor SET location_id = ?, sensor_name = ?, sensor_category = ?, sensor_meta = ? WHERE ID = ?", [location_id, sensor_name, sensor_category, sensor_meta, id]);
+        const insert = await pool.query("UPDATE Sensor SET location_id = ?, sensor_name = ?, sensor_category = ?, sensor_meta = ? WHERE ID = ?", [location_id, sensor_name, sensor_category, sensor_meta, id]);
         
         if (insert[0].affectedRows === 0) {
             return res.status(400).json({ message: "Sensor not updated" });
@@ -80,10 +80,10 @@ export const editSensor = async (req, res) => {
     }
 }
 
-export const deleteSensor = async (req, res) => {
+ const deleteSensor = async (req, res) => {
     try {
         const { id } = req.params;
-        const insert = await pool.promise().query("DELETE Sensor, SensorData\
+        const insert = await pool.query("DELETE Sensor, SensorData\
         FROM Sensor\
         LEFT JOIN SensorData ON Sensor.ID = SensorData.sensor_id\
         WHERE Sensor.ID = ?;\
@@ -99,4 +99,12 @@ export const deleteSensor = async (req, res) => {
     } catch (error) {
         res.status(500).json(error);
     }
+}
+
+module.exports = {
+    getSensors,
+    getSensorById,
+    createSensor,
+    editSensor,
+    deleteSensor
 }
